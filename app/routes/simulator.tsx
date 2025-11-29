@@ -66,6 +66,7 @@ export default function Simulator() {
           vatRateMixed: data.scenario.vatRateMixed,
           zusType: data.scenario.zusType,
           currentTaxationForm: data.scenario.currentTaxationForm,
+          selectedTaxYear: 2026,
         };
         setConfig(reconstructedConfig);
 
@@ -106,8 +107,17 @@ export default function Simulator() {
   };
 
   const handleConfigSubmit = async (configData: ConfigurationData) => {
-    // Create scenario in D1
+    // Create or update scenario
     try {
+      // If scenario already exists, just update config and recalculate
+      if (scenarioId) {
+        setConfig(configData);
+        setResults(null);
+        setStep('investments');
+        return;
+      }
+
+      // Otherwise, create new scenario in D1
       const response = await fetch('/api/simulation/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -272,7 +282,10 @@ export default function Simulator() {
         {/* Configuration Step */}
         {step === 'config' && (
           <div>
-            <ConfigurationForm onSubmit={handleConfigSubmit} />
+            <ConfigurationForm
+              initialData={config || undefined}
+              onSubmit={handleConfigSubmit}
+            />
           </div>
         )}
 
@@ -384,7 +397,13 @@ export default function Simulator() {
               </div>
 
               {/* Actions */}
-              <div className="mt-6 flex gap-3">
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  onClick={() => setStep('config')}
+                  className="rounded-md border border-gray-600 px-6 py-2 font-semibold hover:bg-gray-800"
+                >
+                  ← Modyfikuj konfigurację
+                </button>
                 <button
                   onClick={() => setStep('investments')}
                   className="rounded-md border border-gray-600 px-6 py-2 font-semibold hover:bg-gray-800"
@@ -399,9 +418,9 @@ export default function Simulator() {
                     setInvestments([]);
                     setResults(null);
                   }}
-                  className="rounded-md border border-gray-600 px-6 py-2 font-semibold hover:bg-gray-800"
+                  className="rounded-md border border-blue-600 px-6 py-2 font-semibold text-blue-400 hover:bg-blue-950/50"
                 >
-                  Nowa symulacja
+                  + Nowa symulacja
                 </button>
               </div>
             </div>

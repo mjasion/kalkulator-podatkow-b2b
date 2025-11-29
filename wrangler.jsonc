@@ -12,9 +12,6 @@
 	"compatibility_date": "2025-10-08",
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "./workers/app.ts",
-	"vars": {
-		"VALUE_FROM_CLOUDFLARE": "Hello from Hono/CF"
-	},
 	/**
 	 * Secrets (use wrangler secret put to set securely)
 	 * OPENAI_API_KEY - Required for AI analysis endpoint

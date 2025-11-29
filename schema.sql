@@ -11,6 +11,11 @@ CREATE TABLE IF NOT EXISTS scenarios (
   current_taxation_form TEXT NOT NULL
 );
 
+-- Add missing columns to existing scenarios table (for schema migrations)
+ALTER TABLE scenarios ADD COLUMN title TEXT DEFAULT NULL;
+ALTER TABLE scenarios ADD COLUMN yearly_revenue_netto REAL DEFAULT 0;
+ALTER TABLE scenarios ADD COLUMN yearly_fixed_costs REAL DEFAULT 0;
+
 -- Stores planned investments attached to a scenario
 CREATE TABLE IF NOT EXISTS investments (
   id TEXT PRIMARY KEY,
