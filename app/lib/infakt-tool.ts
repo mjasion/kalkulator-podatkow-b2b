@@ -52,15 +52,16 @@ async function fetchInFaktData(apiKey: string, year: number): Promise<InFaktMont
 }
 
 /**
- * InFakt data fetching tool for AI SDK
+ * Create InFakt data fetching tool with API key injected server-side
+ * This prevents exposing the API key to the client
  */
-export const infaktTool = tool({
+export const createInFaktTool = (infaktApiKey: string) => tool({
   description: 'Fetch historical revenue and expense data from InFakt accounting system for a specific year. Returns monthly breakdown of revenue and categorized expenses.',
   parameters: z.object({
-    apiKey: z.string().describe('InFakt API key provided by the user'),
     year: z.number().describe('Year to fetch data for (e.g., 2025)'),
   }),
-  execute: async ({ apiKey, year }) => {
+  execute: async ({ year }) => {
+    const apiKey = infaktApiKey; // Use server-side API key
     try {
       const data = await fetchInFaktData(apiKey, year);
 

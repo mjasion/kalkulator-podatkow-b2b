@@ -279,22 +279,32 @@ app.post("/api/simulation/:id/calculate", async (c) => {
  */
 app.post("/api/ai/analyze-infakt", async (c) => {
 	const body = await c.req.json<{
-		apiKey: string;
 		year: number;
 	}>();
 
 	try {
 		const { generateObject } = await import("ai");
 		const { openai } = await import("@ai-sdk/openai");
-		const { infaktTool, INFAKT_ANALYSIS_PROMPT } = await import("../app/lib/infakt-tool");
+		const { createInFaktTool, INFAKT_ANALYSIS_PROMPT } = await import("../app/lib/infakt-tool");
 		const { z } = await import("zod");
 
-		// Get OpenAI API key from environment (set via wrangler secret)
+		// Get API keys from environment (set via wrangler secret)
 		const openaiKey = c.env.OPENAI_API_KEY || "";
+		const infaktKey = c.env.INFAKT_API_KEY || "";
+
 		if (!openaiKey) {
 			return c.json(
 				{
 					error: "OpenAI API key not configured. Set OPENAI_API_KEY secret via: wrangler secret put OPENAI_API_KEY",
+				},
+				500,
+			);
+		}
+
+		if (!infaktKey) {
+			return c.json(
+				{
+					error: "InFakt API key not configured. Set INFAKT_API_KEY secret via: wrangler secret put INFAKT_API_KEY",
 				},
 				500,
 			);
@@ -320,13 +330,16 @@ app.post("/api/ai/analyze-infakt", async (c) => {
 			recommendations: z.array(z.string()),
 		});
 
+		// Create InFakt tool with server-side API key
+		const infaktTool = createInFaktTool(infaktKey);
+
 		// Use AI SDK with tools to analyze InFakt data
 		const result = await generateObject({
 			model: openai("gpt-4o-mini", { apiKey: openaiKey }),
 			prompt: `${INFAKT_ANALYSIS_PROMPT}
 
 Analyze the InFakt data for year ${body.year} using the fetchInFaktData tool.
-User's InFakt API key: ${body.apiKey}
+The InFakt API key is already configured server-side for security.
 
 After fetching the data, provide your analysis in the required JSON format.`,
 			schema: analysisSchema,

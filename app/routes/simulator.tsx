@@ -32,6 +32,8 @@ export default function Simulator() {
   const [showCarForm, setShowCarForm] = useState(false);
   const [showEquipmentForm, setShowEquipmentForm] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<{ revenue: number; fixedCosts: number } | null>(null);
+  const [isLoadingInFakt, setIsLoadingInFakt] = useState(false);
 
   // Load scenario from URL params or localStorage on mount
   useEffect(() => {
@@ -104,6 +106,34 @@ export default function Simulator() {
 
   const handleConfigureTaxRates = () => {
     window.location.href = '/tax-config';
+  };
+
+  const handleFetchInFakt = async (year: number) => {
+    setIsLoadingInFakt(true);
+    try {
+      const response = await fetch('/api/ai/analyze-infakt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year }),
+      });
+
+      const data = (await response.json()) as any;
+
+      if (data.success && data.analysis) {
+        // Extract revenue and costs from AI analysis
+        setAiSuggestion({
+          revenue: Math.round(data.analysis.revenueForecast.baseline),
+          fixedCosts: Math.round(data.analysis.fixedCostsForecast.monthlyTotal * 12),
+        });
+      } else {
+        alert(data.error || 'Nie udało się pobrać danych z InFakt');
+      }
+    } catch (error) {
+      console.error('Failed to fetch InFakt data:', error);
+      alert('Błąd podczas pobierania danych z InFakt. Sprawdź czy klucze API są skonfigurowane.');
+    } finally {
+      setIsLoadingInFakt(false);
+    }
   };
 
   const handleConfigSubmit = async (configData: ConfigurationData) => {
@@ -281,10 +311,29 @@ export default function Simulator() {
 
         {/* Configuration Step */}
         {step === 'config' && (
-          <div>
+          <div className="space-y-6">
+            {/* InFakt Integration Button */}
+            <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-6">
+              <h3 className="mb-2 text-lg font-bold">Pobierz dane z InFakt (opcjonalne)</h3>
+              <p className="mb-4 text-sm text-gray-400">
+                Wykorzystaj AI do analizy Twoich historycznych danych z InFakt i automatycznego wypełnienia przychodów i kosztów.
+              </p>
+              <button
+                onClick={() => handleFetchInFakt(2025)}
+                disabled={isLoadingInFakt}
+                className="rounded-md bg-purple-600 px-6 py-2 font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+              >
+                {isLoadingInFakt ? '⏳ Pobieranie...' : '🤖 Pobierz z InFakt (rok 2025)'}
+              </button>
+              <p className="mt-2 text-xs text-gray-500">
+                Wymaga skonfigurowania kluczy OPENAI_API_KEY i INFAKT_API_KEY w sekretach Cloudflare Workers
+              </p>
+            </div>
+
             <ConfigurationForm
               initialData={config || undefined}
               onSubmit={handleConfigSubmit}
+              aiSuggestion={aiSuggestion || undefined}
             />
           </div>
         )}
