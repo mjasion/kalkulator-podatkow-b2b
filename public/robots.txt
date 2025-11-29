@@ -1,10 +1,2 @@
 User-agent: *
 Disallow: /
-
-User-agent: Googlebot
-Disallow: /api/
-Allow: /
-
-User-agent: Bingbot
-Disallow: /api/
-Allow: /
