@@ -21,7 +21,6 @@ export function HistorySidebar({ currentScenarioId, onSelectScenario, onNewSimul
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(true);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchScenarios = async () => {
@@ -63,18 +62,11 @@ export function HistorySidebar({ currentScenarioId, onSelectScenario, onNewSimul
     return scenario.investments.reduce((sum, inv) => sum + inv.costNetto, 0);
   };
 
-  const copyToClipboard = (scenarioId: string, includeResults: boolean = true) => {
-    const baseUrl = window.location.origin;
+  const navigateToScenario = (scenarioId: string) => {
     const params = new URLSearchParams();
     params.set('scenario', scenarioId);
-    if (includeResults) {
-      params.set('calculate', '1');
-    }
-    const shareLink = `${baseUrl}/simulator?${params.toString()}`;
-    navigator.clipboard.writeText(shareLink).then(() => {
-      setCopiedId(scenarioId);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
+    params.set('calculate', '1');
+    window.location.href = `/simulator?${params.toString()}`;
   };
 
   return (
@@ -119,8 +111,8 @@ export function HistorySidebar({ currentScenarioId, onSelectScenario, onNewSimul
                 }`}
               >
                 <button
-                  onClick={() => onSelectScenario(scenario.id)}
-                  className="w-full text-left text-sm"
+                  onClick={() => navigateToScenario(scenario.id)}
+                  className="w-full text-left text-sm cursor-pointer"
                 >
                   {isExpanded ? (
                     <div className="space-y-1">
@@ -143,16 +135,6 @@ export function HistorySidebar({ currentScenarioId, onSelectScenario, onNewSimul
                     <div className="text-xs font-semibold text-center">{scenario.investmentCount}</div>
                   )}
                 </button>
-
-                {isExpanded && (
-                  <button
-                    onClick={() => copyToClipboard(scenario.id)}
-                    className="mt-2 w-full rounded bg-gray-700 px-2 py-1 text-xs font-medium text-gray-300 hover:bg-gray-600 transition-colors opacity-0 group-hover:opacity-100"
-                    title={scenario.id}
-                  >
-                    {copiedId === scenario.id ? '✓ Skopiowano!' : '📋 Kopiuj link'}
-                  </button>
-                )}
               </div>
             ))}
           </div>
