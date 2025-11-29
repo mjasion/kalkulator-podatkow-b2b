@@ -10,13 +10,26 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "kalkulator-podatkow-b2b",
 	"compatibility_date": "2025-10-08",
+	"compatibility_flags": ["nodejs_compat"],
 	"main": "./workers/app.ts",
 	"vars": {
 		"VALUE_FROM_CLOUDFLARE": "Hello from Hono/CF"
 	},
+	/**
+	 * Secrets (use wrangler secret put to set securely)
+	 * OPENAI_API_KEY - Required for AI analysis endpoint
+	 * Set via: wrangler secret put OPENAI_API_KEY
+	 */
 	"observability": {
 		"enabled": true
 	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "kalkulator-db",
+			"database_id": "bb11c385-fef8-4513-83c1-afee31bc31f6"
+		}
+	],
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
